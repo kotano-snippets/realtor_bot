@@ -1,6 +1,5 @@
-###
 import time
-from requests.exceptions import ReadTimeout
+from requests.exceptions import ReadTimeout  # noqa: F401
 
 import telebot
 from telebot import types
@@ -8,9 +7,9 @@ from telebot import types
 import config
 import content as c
 
-###
+
 bot = telebot.TeleBot(config.token)
-###
+
 mainkeyboard = types.ReplyKeyboardMarkup(row_width=2)
 mainkeyboard.row("О нас")
 mainkeyboard.row("Регистрация")
@@ -51,14 +50,12 @@ remont_keyboard.add("Не важно")
 remont_keyboard.row("Отменить")
 
 
-# TODO: Change welcome message
 @bot.message_handler(commands=['start'])
 def start_message(message):
     bot.send_message(
         message.chat.id, c.welcome_message, reply_markup=mainkeyboard)
 
 
-###
 @bot.message_handler(content_types=["text"])
 def repeat_all_messages(message):
     if message.text == "О нас":
@@ -72,7 +69,6 @@ def repeat_all_messages(message):
     elif message.text == "Отменить":
         bot.send_message(message.chat.id, "Вы вернулись назад",
                          reply_markup=mainkeyboard)
-###
 
 
 def get_name(message):
@@ -182,7 +178,6 @@ def get_num(message):
             reply_markup=keyboard, parse_mode="markdown")
 
 
-###
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):
     try:
@@ -213,7 +208,5 @@ def callback_worker(call):
         bot.send_message(call.message.chat.id, "Перезагрузите бота \n/start")
 
 
-###
 if __name__ == '__main__':
     bot.polling(none_stop=True)
-###
