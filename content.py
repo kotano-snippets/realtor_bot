@@ -44,8 +44,8 @@ query_date = 'Регистрация пользователя\nUTC {current_time
 user_data = '''
 Данные пользователя (Telegram)
 
-User: @{0}
-Имя: {1}
-Фамилия: {2}
-ID: {3}
+User: @{username}
+Имя: {first_name}
+Фамилия: {last_name}
+ID: {id}
 '''

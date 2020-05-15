@@ -1,16 +1,13 @@
 import time
-from requests.exceptions import ReadTimeout  # noqa: F401
 
 import telebot
+from requests.exceptions import (ConnectTimeout, ProxyError,  # noqa: F401
+                                 ReadTimeout)
 from telebot import types
+from telebot import apihelper
 
 import config
 import content as c
-
-
-if config.proxy:
-    from telebot import apihelper
-    apihelper.proxy = {'https': '{}'.format(config.proxy)}
 
 
 bot = telebot.TeleBot(config.token)
@@ -53,6 +50,8 @@ remont_keyboard.row("Требует ремонта", "Косметический
 remont_keyboard.row("По дизайну проекта", "Современный")
 remont_keyboard.add("Не важно")
 remont_keyboard.row("Отменить")
+
+answers = None
 
 
 @bot.message_handler(commands=['start'])
@@ -162,6 +161,7 @@ def get_num(message):
     global answers
     num = message.text
     # NOTE: Be careful when renaming vars
+    answers = dict.fromkeys()
     answers = {'name': name, 'place': place, 'pay': pay, 'budgets': budgets,
                'type_build': type_build, 'remont': remont, 'num': num
                }
@@ -187,30 +187,47 @@ def callback_worker(call):
         if call.data == "yes":
             admin = config.admin
             user_data = c.user_data.format(
-                call.from_user.username, call.from_user.first_name,
-                call.from_user.last_name, call.from_user.id)
-            bot.send_message(
+                username=call.from_user.username,
+                first_name=call.from_user.first_name,
+                last_name=call.from_user.last_name,
+                id=call.from_user.id)
+            r = bot.send_message(
                 admin,
                 text=(
                     c.query_date.format(current_time=time.ctime()) +
                     c.user_answers.format(**answers) +
-                    user_data),
-                parse_mode="markdown")
+                    user_data))
+            # FIXME: Causes unknown error during test
+            #   # parse_mode="markdown")
 
             bot.delete_message(call.message.chat.id, results.message_id)
             bot.send_message(
                 call.message.chat.id,
                 "Сообщение отправлено!)\nЖдите ответа от Администратора",
                 reply_markup=mainkeyboard)
+            # return r
         elif call.data == 'no':
             bot.delete_message(call.message.chat.id, results.message_id)
-            bot.send_message(call.message.chat.id,
-                             "Отправка отменена", reply_markup=mainkeyboard)
+            r = bot.send_message(
+                call.message.chat.id, "Отправка отменена",
+                reply_markup=mainkeyboard)
     except Exception as e:
         print(e)
         bot.send_message(call.message.chat.id, "Перезагрузите бота \n/start")
+    finally:
+        return r
+
+
+def start_bot(bot):
+    try:
+        bot.polling(none_stop=True)
+    except (ConnectTimeout, ProxyError):
+        if config.allow_proxy:
+            apihelper.proxy = {'https': next(config.proxies)}
+            print('Change proxy to: ', apihelper.proxy)
+            start_bot(bot)
 
 
 if __name__ == '__main__':
-    bot.polling(none_stop=True)
-    print('Hello')
+    print('\n\n\nStart\n\n\n')
+    start_bot(bot)
