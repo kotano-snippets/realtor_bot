@@ -8,6 +8,11 @@ import config
 import content as c
 
 
+if config.proxy:
+    from telebot import apihelper
+    apihelper.proxy = {'https': '{}'.format(config.proxy)}
+
+
 bot = telebot.TeleBot(config.token)
 
 mainkeyboard = types.ReplyKeyboardMarkup(row_width=2)
@@ -52,7 +57,7 @@ remont_keyboard.row("Отменить")
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
-    bot.send_message(
+    return bot.send_message(
         message.chat.id, c.welcome_message, reply_markup=mainkeyboard)
 
 
@@ -60,8 +65,6 @@ def start_message(message):
 def repeat_all_messages(message):
     if message.text == "О нас":
         bot.send_message(message.chat.id, c.about_us)
-        print(message.chat.id)
-        print(message.from_user.id)
     elif message.text == "Регистрация":
         bot.send_message(
             message.from_user.id, c.introduce_yrslf, reply_markup=cancel)
@@ -210,3 +213,4 @@ def callback_worker(call):
 
 if __name__ == '__main__':
     bot.polling(none_stop=True)
+    print('Hello')
