@@ -1,15 +1,17 @@
-# realtor bot token
-# token = '1034733347:AAFFVYmKbVAVnz3GvTLXF5BOCOr8iCuTkzE'  # rieltor_bot token
+# RIELTOR_SPBSTU_BOT
+bot_username = '@rieltor_spbstu_bot'
+token = '1034733347:AAFFVYmKbVAVnz3GvTLXF5BOCOr8iCuTkzE'
 # admin = 529665735  # Admin ID Telegram
+admin = 905484789  # TeaTskaya ID
 
-# test kotpybot token
-bot_username = '@kotpybot'
-token = '821235624:AAFlR4yJHGaEYP725DRXBFHKqwV6uxA-DB0'
-admin = 732101811  # Test Admin ID Telegram
+# KOTPYBOT
+# bot_username = '@kotpybot'
+# token = '821235624:AAFlR4yJHGaEYP725DRXBFHKqwV6uxA-DB0'
+# admin = 732101811
 
 
 allow_proxy = True
 proxies = iter([
     'https://77.65.13.85:8080', 'https://51.79.55.115:3128',
     'https://54.37.103.99:3128', 'https://85.10.198.215:3838',
-    ])
+])

@@ -1,8 +1,7 @@
 import time
 
 import telebot
-from requests.exceptions import (ConnectTimeout, ProxyError,  # noqa: F401
-                                 ReadTimeout)
+from requests.exceptions import (ConnectTimeout, ProxyError)
 from telebot import types
 from telebot import apihelper
 
@@ -56,6 +55,7 @@ answers = None
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
+    print(message.from_user.id)
     return bot.send_message(
         message.chat.id, c.welcome_message, reply_markup=mainkeyboard)
 
@@ -161,7 +161,6 @@ def get_num(message):
     global answers
     num = message.text
     # NOTE: Be careful when renaming vars
-    answers = dict.fromkeys()
     answers = {'name': name, 'place': place, 'pay': pay, 'budgets': budgets,
                'type_build': type_build, 'remont': remont, 'num': num
                }
@@ -179,6 +178,7 @@ def get_num(message):
         results = bot.send_message(
             message.chat.id, text=question,
             reply_markup=keyboard, parse_mode="markdown")
+        return results
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -205,20 +205,19 @@ def callback_worker(call):
                 call.message.chat.id,
                 "Сообщение отправлено!)\nЖдите ответа от Администратора",
                 reply_markup=mainkeyboard)
-            # return r
+            return r
         elif call.data == 'no':
             bot.delete_message(call.message.chat.id, results.message_id)
-            r = bot.send_message(
+            bot.send_message(
                 call.message.chat.id, "Отправка отменена",
                 reply_markup=mainkeyboard)
     except Exception as e:
         print(e)
         bot.send_message(call.message.chat.id, "Перезагрузите бота \n/start")
-    finally:
-        return r
 
 
 def start_bot(bot):
+    '''Start bot. If can't connect, use proxy if allow_proxy == True'''
     try:
         bot.polling(none_stop=True)
     except (ConnectTimeout, ProxyError):

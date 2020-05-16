@@ -5,12 +5,13 @@ import content as c
 import bot as b
 from bot import time
 
+
 # NOTE: Test time may vary depending on connection speed
 # and server availability.
 
 testbot_username = '@kotpybot'
 test_token = '821235624:AAFlR4yJHGaEYP725DRXBFHKqwV6uxA-DB0'
-test_id = 732101811
+test_id = 905484789
 
 test_answers = {
     'name': 'testman', 'place': 'program', 'pay': 'Cash',
@@ -72,13 +73,11 @@ def test_start(monkeypatch, test_data):
     assert r.text == c.welcome_message.strip()
 
 
-# @pytest.mark.skip
-def test_get_num():
-    pass
+def test_get_num(monkeypatch):
     message = Message(test_answers['num'])
-    print(b.__dict__)
+    b.__dict__.update(test_answers)  # XXX: Consider using monkeypatch if psbl
     r = b.get_num(message)
-    (name, place, pay, budgets, type_build, remont, num)
+    assert r.text == c.question.format(**test_answers)
 
 
 def test_integration(monkeypatch, test_data):
@@ -86,7 +85,7 @@ def test_integration(monkeypatch, test_data):
     expected = '{}{}{}'.format(
         c.query_date.format(current_time=b.time.ctime()),
         c.user_answers.format(**test_answers),
-        c.user_data.format(**tud)
+        c.user_data.format(**tud),
     )
 
     call = Call('yes')
