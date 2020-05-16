@@ -79,7 +79,6 @@ def get_name(message):
     if name == "Отменить" or name == "отменить":
         bot.send_message(message.chat.id, "Вы вернулись назад",
                          reply_markup=mainkeyboard)
-        pass
     else:
         bot.send_message(
             message.chat.id, 'Выберите вид недвижимости:',
@@ -93,7 +92,6 @@ def get_place(message):
     if place == "Отменить" or place == "отменить":
         bot.send_message(message.chat.id, "Вы вернулись назад",
                          reply_markup=mainkeyboard)
-        pass
     else:
         bot.send_message(
             message.chat.id, 'Выберите способ расчета:',
@@ -107,7 +105,6 @@ def get_pay(message):
     if pay == "Отменить" or pay == "отменить":
         bot.send_message(message.chat.id, "Вы вернулись назад",
                          reply_markup=mainkeyboard)
-        pass
     else:
         bot.send_message(
             message.chat.id, 'Введите максимальный бюджет:',
@@ -121,7 +118,6 @@ def get_budgets(message):
     if budgets == "Отменить" or budgets == "отменить":
         bot.send_message(message.chat.id, "Вы вернулись назад",
                          reply_markup=mainkeyboard)
-        pass
     else:
         bot.send_message(message.chat.id, "Тип жилья",
                          reply_markup=type_build_keyboard)
@@ -134,7 +130,6 @@ def get_type_build(message):
     if type_build == "Отменить" or type_build == "отменить":
         bot.send_message(message.chat.id, "Вы вернулись назад",
                          reply_markup=mainkeyboard)
-        pass
     else:
         bot.send_message(message.chat.id, "Выберите ремонт:",
                          reply_markup=remont_keyboard)

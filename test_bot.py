@@ -9,8 +9,8 @@ from bot import time
 # NOTE: Test time may vary depending on connection speed
 # and server availability.
 
-testbot_username = '@kotpybot'
-test_token = '821235624:AAFlR4yJHGaEYP725DRXBFHKqwV6uxA-DB0'
+testbot_username = '@rieltor_spbstu_bot'
+test_token = '1034733347:AAFFVYmKbVAVnz3GvTLXF5BOCOr8iCuTkzE'
 test_id = 905484789
 
 test_answers = {
@@ -59,7 +59,7 @@ def return_bot():
 
 
 @pytest.fixture
-def test_data(monkeypatch):
+def provide_data(monkeypatch):
     '''Patch input data and return tuple(id, answers)'''
     monkeypatch.setattr(config, 'admin', test_id)
     monkeypatch.setattr(b, 'answers', test_answers)
@@ -67,20 +67,20 @@ def test_data(monkeypatch):
 
 
 # @pytest.mark.skip
-def test_start(monkeypatch, test_data):
+def test_start():
     message = Message('/start')
     r = b.start_message(message)
     assert r.text == c.welcome_message.strip()
 
 
-def test_get_num(monkeypatch):
+def test_get_num():
     message = Message(test_answers['num'])
     b.__dict__.update(test_answers)  # XXX: Consider using monkeypatch if psbl
     r = b.get_num(message)
     assert r.text == c.question.format(**test_answers)
 
 
-def test_integration(monkeypatch, test_data):
+def test_integration(monkeypatch, provide_data):
     monkeypatch.setattr(time, 'ctime', lambda: 'testtime')
     expected = '{}{}{}'.format(
         c.query_date.format(current_time=b.time.ctime()),
