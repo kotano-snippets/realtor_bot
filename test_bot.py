@@ -16,7 +16,7 @@ test_id = 905484789
 test_answers = {
     'name': 'testman', 'place': 'program', 'pay': 'Cash',
     'budgets': '100', 'type_build': 'New',
-    'remont': 'remonted)', 'num': '31415926'
+    'remont': 'remonted)', 'num': '6811500121'
 }
 
 # test_user_data
