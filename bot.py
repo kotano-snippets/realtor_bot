@@ -50,7 +50,16 @@ remont_keyboard.row("По дизайну проекта", "Современны�
 remont_keyboard.add("Не важно")
 remont_keyboard.row("Отменить")
 
-answers = None
+answers = {}
+
+
+def check_cancel(answer, message):
+    if answer.lower() == "отменить":
+        bot.send_message(
+            message.chat.id, "Вы вернулись назад",
+            reply_markup=mainkeyboard)
+        return True
+    return False
 
 
 @bot.message_handler(commands=['start'])
@@ -74,9 +83,9 @@ def repeat_all_messages(message):
 
 
 def get_name(message):
-    global name
     name = message.text
-    if name == "Отменить" or name == "отменить":
+    answers['name'] = name
+    if name.lower() == "отменить":
         bot.send_message(message.chat.id, "Вы вернулись назад",
                          reply_markup=mainkeyboard)
     else:
@@ -87,9 +96,9 @@ def get_name(message):
 
 
 def get_place(message):
-    global place
     place = message.text
-    if place == "Отменить" or place == "отменить":
+    answers['place'] = place
+    if place.lower() == "отменить":
         bot.send_message(message.chat.id, "Вы вернулись назад",
                          reply_markup=mainkeyboard)
     else:
@@ -100,8 +109,8 @@ def get_place(message):
 
 
 def get_pay(message):
-    global pay
     pay = message.text
+    answers['pay'] = message.text
     if pay == "Отменить" or pay == "отменить":
         bot.send_message(message.chat.id, "Вы вернулись назад",
                          reply_markup=mainkeyboard)
@@ -113,9 +122,9 @@ def get_pay(message):
 
 
 def get_budgets(message):
-    global budgets
     budgets = message.text
-    if budgets == "Отменить" or budgets == "отменить":
+    answers['budgets'] = budgets
+    if budgets.lower() == "отменить":
         bot.send_message(message.chat.id, "Вы вернулись назад",
                          reply_markup=mainkeyboard)
     else:
@@ -125,9 +134,9 @@ def get_budgets(message):
 
 
 def get_type_build(message):
-    global type_build
     type_build = message.text
-    if type_build == "Отменить" or type_build == "отменить":
+    answers['type_build'] = type_build
+    if type_build.lower() == "отменить":
         bot.send_message(message.chat.id, "Вы вернулись назад",
                          reply_markup=mainkeyboard)
     else:
@@ -137,8 +146,8 @@ def get_type_build(message):
 
 
 def get_remont(message):
-    global remont
     remont = message.text
+    answers['remont'] = remont
     if remont == "Отменить" or remont == "отменить":
         bot.send_message(message.chat.id, "Вы вернулись назад",
                          reply_markup=mainkeyboard)
@@ -151,14 +160,14 @@ def get_remont(message):
 
 
 def get_num(message):
-    global num
     global results
-    global answers
+    # global answers
     num = message.text
+    answers['num'] = num
     # NOTE: Be careful when renaming vars
-    answers = {'name': name, 'place': place, 'pay': pay, 'budgets': budgets,
-               'type_build': type_build, 'remont': remont, 'num': num
-               }
+    # answers = {'name': name, 'place': place, 'pay': pay, 'budgets': budgets,
+    #            'type_build': type_build, 'remont': remont, 'num': num
+    #            }
     keyboard = types.InlineKeyboardMarkup()
     key_yes = types.InlineKeyboardButton(text="Да", callback_data='yes')
     keyboard.add(key_yes)
@@ -166,7 +175,7 @@ def get_num(message):
     keyboard.add(key_no)
     question = c.question.format(**answers)
 
-    if num == "Отменить" or num == "отменить":
+    if num.lower() == "отменить":
         bot.send_message(message.chat.id, "Вы вернулись назад",
                          reply_markup=mainkeyboard)
     else:
