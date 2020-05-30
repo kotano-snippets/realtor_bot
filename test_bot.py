@@ -1,9 +1,8 @@
 import pytest
 
+import bot as b
 import config
 import content as c
-import bot as b
-from bot import time
 
 
 # NOTE: Test time may vary depending on connection speed
@@ -12,6 +11,7 @@ from bot import time
 testbot_username = '@rieltor_spbstu_bot'
 test_token = '1034733347:AAFFVYmKbVAVnz3GvTLXF5BOCOr8iCuTkzE'
 test_id = 905484789
+
 
 test_answers = {
     'name': 'testman', 'place': 'program', 'pay': 'Cash',
@@ -50,14 +50,6 @@ class Call(Dct):
         self.message = Message('Да')
 
 
-# TODO: Figure out how to reduce connection time
-@pytest.fixture
-def return_bot():
-    bot = b.telebot.TeleBot(test_token)
-    b.start_bot(bot)
-    return bot
-
-
 @pytest.fixture
 def provide_data(monkeypatch):
     '''Patch input data and return tuple(id, answers)'''
@@ -66,24 +58,29 @@ def provide_data(monkeypatch):
     return test_id, test_answers
 
 
-# @pytest.mark.skip
 def test_start():
     message = Message('/start')
     r = b.start_message(message)
     assert r.text == c.welcome_message.strip()
 
 
+def test_cancel():
+    message = Message('отменить')
+    r = b.get_name(message)
+    assert r.text == message.text
+
+
 def test_get_num():
     message = Message(test_answers['num'])
-    b.__dict__.update(test_answers)  # XXX: Consider using monkeypatch if psbl
+    b.answers.update(test_answers)  # XXX: Consider using monkeypatch if psbl
     r = b.get_num(message)
     assert r.text == c.question.format(**test_answers)
 
 
 def test_integration(monkeypatch, provide_data):
-    monkeypatch.setattr(time, 'ctime', lambda: 'testtime')
+    monkeypatch.setattr(b, 'ctime', lambda: 'testtime')
     expected = '{}{}{}'.format(
-        c.query_date.format(current_time=b.time.ctime()),
+        c.query_date.format(current_time=b.ctime()),
         c.user_answers.format(**test_answers),
         c.user_data.format(**tud),
     )
@@ -91,3 +88,6 @@ def test_integration(monkeypatch, provide_data):
     call = Call('yes')
     r = b.callback_worker(call)
     assert r.text == expected.strip()
+
+
+pytest.main()

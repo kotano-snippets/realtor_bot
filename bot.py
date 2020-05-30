@@ -1,173 +1,148 @@
-import time
+from time import ctime
 
 import telebot
-from requests.exceptions import (ConnectTimeout, ProxyError)
-from telebot import types
-from telebot import apihelper
+from requests.exceptions import (
+    ConnectTimeout, ProxyError, ReadTimeout)
+from telebot import apihelper, types
 
 import config
 import content as c
 
-
 bot = telebot.TeleBot(config.token)
-
-mainkeyboard = types.ReplyKeyboardMarkup(row_width=2)
-mainkeyboard.row("О нас")
-mainkeyboard.row("Регистрация")
-
-rus_num = types.ReplyKeyboardMarkup(row_width=2)
-rus_num.row("Да")
-rus_num.row("Нет")
-
-cancel = types.ReplyKeyboardMarkup(row_width=2)
-cancel.add("Не важно")
-cancel.add("Отменить")
-
-cancel1 = types.ReplyKeyboardMarkup(row_width=2)
-cancel1.add("Отменить")
-
-place_keyboard = types.ReplyKeyboardMarkup(row_width=2)
-place_keyboard.row("Квартира")
-place_keyboard.row("Загородный дом")
-place_keyboard.add("Не важно")
-place_keyboard.add("Отменить")
-
-pay_keyboard = types.ReplyKeyboardMarkup(row_width=2)
-pay_keyboard.row("Ипотека")
-pay_keyboard.row("Наличные")
-pay_keyboard.add("Не важно")
-pay_keyboard.row("Отменить")
-
-type_build_keyboard = types.ReplyKeyboardMarkup(row_width=2)
-type_build_keyboard.row("Вторичное")
-type_build_keyboard.row("Новое")
-type_build_keyboard.add("Не важно")
-type_build_keyboard.row("Отменить")
-
-remont_keyboard = types.ReplyKeyboardMarkup(row_width=2)
-remont_keyboard.row("Требует ремонта", "Косметический")
-remont_keyboard.row("По дизайну проекта", "Современный")
-remont_keyboard.add("Не важно")
-remont_keyboard.row("Отменить")
 
 answers = {}
 
 
-def check_cancel(answer, message):
-    if answer.lower() == "отменить":
-        bot.send_message(
-            message.chat.id, "Вы вернулись назад",
-            reply_markup=mainkeyboard)
-        return True
-    return False
+def make_keyboard(replies, width=1, cancel=True, extra=''):
+    '''Add reply keyboard
+
+        Parameters:
+            replies(list): list of replies
+            width(int): max width of rows
+            cancel(bool): set to False if you don't want cancel btn to appear
+    '''
+    keyb = types.ReplyKeyboardMarkup(row_width=width)
+    keyb.add(*replies)
+    if extra:
+        keyb.row(extra)
+    if cancel:
+        keyb.row('Отменить')
+    return keyb
+
+
+# Keyboards
+K_MAIN = make_keyboard(['О нас', 'Регистрация'], 1, False, None)
+K_CANCEL = make_keyboard([], extra='Не важно')
+K_YESNO = make_keyboard(["Да", "Нет"], 2, False, None)
+
+
+def check_cancel(func):
+    '''Decorator;
+    If answered 'отменить' get back to
+    mainkeyboard and return message object'''
+
+    def inner(message):
+        if message.text.lower() == "отменить":
+            bot.send_message(
+                message.chat.id, "Вы вернулись назад",
+                reply_markup=K_MAIN)
+            return message
+        else:
+            return func(message)
+    return inner
 
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
     print(message.from_user.id)
     return bot.send_message(
-        message.chat.id, c.welcome_message, reply_markup=mainkeyboard)
+        message.chat.id, c.welcome_message, reply_markup=K_MAIN)
 
 
 @bot.message_handler(content_types=["text"])
+@check_cancel
 def repeat_all_messages(message):
     if message.text == "О нас":
         bot.send_message(message.chat.id, c.about_us)
     elif message.text == "Регистрация":
         bot.send_message(
-            message.from_user.id, c.introduce_yrslf, reply_markup=cancel)
+            message.from_user.id, c.introduce_yrslf, reply_markup=K_CANCEL)
         bot.register_next_step_handler(message, get_name)
-    elif message.text == "Отменить":
-        bot.send_message(message.chat.id, "Вы вернулись назад",
-                         reply_markup=mainkeyboard)
 
 
+@check_cancel
 def get_name(message):
     name = message.text
     answers['name'] = name
-    if name.lower() == "отменить":
-        bot.send_message(message.chat.id, "Вы вернулись назад",
-                         reply_markup=mainkeyboard)
-    else:
-        bot.send_message(
-            message.chat.id, 'Выберите вид недвижимости:',
-            reply_markup=place_keyboard)
-        bot.register_next_step_handler(message, get_place)
+    place_keyboard = make_keyboard(
+        ["Квартира", "Загородный дом"], width=2, extra="Не важно")
+    bot.send_message(
+        message.chat.id, 'Выберите вид недвижимости:',
+        reply_markup=place_keyboard)
+    bot.register_next_step_handler(message, get_place)
 
 
+@check_cancel
 def get_place(message):
     place = message.text
     answers['place'] = place
-    if place.lower() == "отменить":
-        bot.send_message(message.chat.id, "Вы вернулись назад",
-                         reply_markup=mainkeyboard)
-    else:
-        bot.send_message(
-            message.chat.id, 'Выберите способ расчета:',
-            reply_markup=pay_keyboard)
-        bot.register_next_step_handler(message, get_pay)
+    pay_keyboard = make_keyboard(
+        ["Ипотека", "Наличные"], width=2, extra="Не важно")
+    bot.send_message(
+        message.chat.id, 'Выберите способ расчета:',
+        reply_markup=pay_keyboard)
+    bot.register_next_step_handler(message, get_pay)
 
 
+@check_cancel
 def get_pay(message):
     pay = message.text
-    answers['pay'] = message.text
-    if pay == "Отменить" or pay == "отменить":
-        bot.send_message(message.chat.id, "Вы вернулись назад",
-                         reply_markup=mainkeyboard)
-    else:
-        bot.send_message(
-            message.chat.id, 'Введите максимальный бюджет:',
-            reply_markup=cancel)
-        bot.register_next_step_handler(message, get_budgets)
+    answers['pay'] = pay
+    bot.send_message(
+        message.chat.id, 'Введите максимальный бюджет:',
+        reply_markup=K_CANCEL)
+    bot.register_next_step_handler(message, get_budgets)
 
 
+@check_cancel
 def get_budgets(message):
     budgets = message.text
     answers['budgets'] = budgets
-    if budgets.lower() == "отменить":
-        bot.send_message(message.chat.id, "Вы вернулись назад",
-                         reply_markup=mainkeyboard)
-    else:
-        bot.send_message(message.chat.id, "Тип жилья",
-                         reply_markup=type_build_keyboard)
-        bot.register_next_step_handler(message, get_type_build)
+    type_build_keyboard = make_keyboard(
+        ["Вторичное", "Новое"], width=2, extra="Не важно")
+    bot.send_message(message.chat.id, "Тип жилья",
+                     reply_markup=type_build_keyboard)
+    bot.register_next_step_handler(message, get_type_build)
 
 
+@check_cancel
 def get_type_build(message):
     type_build = message.text
     answers['type_build'] = type_build
-    if type_build.lower() == "отменить":
-        bot.send_message(message.chat.id, "Вы вернулись назад",
-                         reply_markup=mainkeyboard)
-    else:
-        bot.send_message(message.chat.id, "Выберите ремонт:",
-                         reply_markup=remont_keyboard)
-        bot.register_next_step_handler(message, get_remont)
+    remont_keyboard = make_keyboard(
+        ["Требует ремонта", "Косметический",
+         "По дизайну проекта", "Современный"],
+        width=2, extra="Не важно")
+    bot.send_message(message.chat.id, "Выберите ремонт:",
+                     reply_markup=remont_keyboard)
+    bot.register_next_step_handler(message, get_remont)
 
 
+@check_cancel
 def get_remont(message):
     remont = message.text
     answers['remont'] = remont
-    if remont == "Отменить" or remont == "отменить":
-        bot.send_message(message.chat.id, "Вы вернулись назад",
-                         reply_markup=mainkeyboard)
-        pass
-    else:
-        bot.send_message(
-            message.chat.id, "Укажите свой номер телефона:",
-            reply_markup=cancel1)
-        bot.register_next_step_handler(message, get_num)
+    bot.send_message(
+        message.chat.id, "Укажите свой номер телефона:",
+        reply_markup=make_keyboard([]))
+    bot.register_next_step_handler(message, get_num)
 
 
+@check_cancel
 def get_num(message):
     global results
-    # global answers
     num = message.text
     answers['num'] = num
-    # NOTE: Be careful when renaming vars
-    # answers = {'name': name, 'place': place, 'pay': pay, 'budgets': budgets,
-    #            'type_build': type_build, 'remont': remont, 'num': num
-    #            }
     keyboard = types.InlineKeyboardMarkup()
     key_yes = types.InlineKeyboardButton(text="Да", callback_data='yes')
     keyboard.add(key_yes)
@@ -175,14 +150,10 @@ def get_num(message):
     keyboard.add(key_no)
     question = c.question.format(**answers)
 
-    if num.lower() == "отменить":
-        bot.send_message(message.chat.id, "Вы вернулись назад",
-                         reply_markup=mainkeyboard)
-    else:
-        results = bot.send_message(
-            message.chat.id, text=question,
-            reply_markup=keyboard, parse_mode="markdown")
-        return results
+    results = bot.send_message(
+        message.chat.id, text=question,
+        reply_markup=keyboard, parse_mode="markdown")
+    return results
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -198,23 +169,21 @@ def callback_worker(call):
             r = bot.send_message(
                 admin,
                 text=(
-                    c.query_date.format(current_time=time.ctime()) +
+                    c.query_date.format(current_time=ctime()) +
                     c.user_answers.format(**answers) +
                     user_data))
-            # FIXME: Causes unknown error during test
-            #   # parse_mode="markdown")
 
             bot.delete_message(call.message.chat.id, results.message_id)
             bot.send_message(
                 call.message.chat.id,
                 "Сообщение отправлено!)\nЖдите ответа от Администратора",
-                reply_markup=mainkeyboard)
+                reply_markup=K_MAIN)
             return r
         elif call.data == 'no':
             bot.delete_message(call.message.chat.id, results.message_id)
             bot.send_message(
                 call.message.chat.id, "Отправка отменена",
-                reply_markup=mainkeyboard)
+                reply_markup=K_MAIN)
     except Exception as e:
         print(e)
         bot.send_message(call.message.chat.id, "Перезагрузите бота \n/start")
@@ -224,7 +193,7 @@ def start_bot(bot):
     '''Start bot. If can't connect, use proxy if allow_proxy == True'''
     try:
         bot.polling(none_stop=True)
-    except (ConnectTimeout, ProxyError):
+    except (ReadTimeout, ConnectTimeout, ProxyError):
         if config.allow_proxy:
             apihelper.proxy = {'https': next(config.proxies)}
             print('Change proxy to: ', apihelper.proxy)
