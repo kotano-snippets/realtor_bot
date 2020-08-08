@@ -27,6 +27,7 @@ tud = {
 
 
 class Dct(dict):
+    # TODO: Change to Mock object.
     pass
 
 
@@ -88,6 +89,3 @@ def test_integration(monkeypatch, provide_data):
     call = Call('yes')
     r = b.callback_worker(call)
     assert r.text == expected.strip()
-
-
-pytest.main()
